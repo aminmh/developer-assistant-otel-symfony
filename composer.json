@@ -1,0 +1,39 @@
+{
+  "name": "aminmh/developer-assistant-otel-symfony",
+  "description": "Symfony adapter for Indexr OpenTelemetry",
+  "type": "library",
+  "license": "Apache-2.0",
+  "require": {
+    "php": ">=8.1",
+    "symfony/config": "^6.4 || ^7.0",
+    "symfony/event-dispatcher": "^6.4 || ^7.0",
+    "symfony/routing": "^6.4 || ^7.0",
+    "symfony/cache-contracts": "^3.0",
+    "symfony/console": "^6.4 || ^7.0",
+    "symfony/dependency-injection": "^6.4 || ^7.0",
+    "symfony/http-kernel": "^6.4 || ^7.0",
+    "aminmh/developer-assistant-otel-core": "self.version"
+  },
+  "suggest": {
+    "open-telemetry/opentelemetry-auto-symfony": "^1.4 for native Symfony hook instrumentation (requires ext-opentelemetry)",
+    "open-telemetry/opentelemetry-auto-doctrine": "Enable Doctrine spans when ext-opentelemetry is installed",
+    "open-telemetry/exporter-otlp": "^1.4 for OTLP HTTP/protobuf export",
+    "symfony/doctrine-bridge": "For Doctrine DBAL middleware wiring",
+    "symfony/messenger": "For Messenger middleware wiring"
+  },
+  "autoload": {
+    "psr-4": {
+      "Indexr\\Otel\\Symfony\\": "src/"
+    }
+  },
+  "extra": {
+    "symfony": {
+      "bundle": [
+        "Indexr\\Otel\\Symfony\\IndexerOtelBundle"
+      ]
+    },
+    "branch-alias": {
+      "dev-main": "0.1.x-dev"
+    }
+  }
+}

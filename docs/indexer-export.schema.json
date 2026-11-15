@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://indexr.dev/schemas/indexer-export-v1.json",
+  "title": "Indexr application introspection export",
+  "type": "object",
+  "required": ["schema_version", "routes", "services", "listeners", "scheduled_tasks", "queue_bindings"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "routes": {"type": "array", "items": {"$ref": "#/$defs/record"}},
+    "services": {"type": "array", "items": {"$ref": "#/$defs/record"}},
+    "listeners": {"type": "array", "items": {"$ref": "#/$defs/record"}},
+    "scheduled_tasks": {"type": "array", "items": {"$ref": "#/$defs/record"}},
+    "queue_bindings": {"type": "array", "items": {"$ref": "#/$defs/record"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "record": {"type": "object", "additionalProperties": true}
+  }
+}

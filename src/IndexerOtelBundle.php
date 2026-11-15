@@ -1,0 +1,17 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Indexr\Otel\Symfony;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+final class IndexerOtelBundle extends Bundle
+{
+    public function build(ContainerBuilder $container): void
+    {
+        parent::build($container);
+        $container->addCompilerPass(new IndexerOtelCompilerPass());
+    }
+}
