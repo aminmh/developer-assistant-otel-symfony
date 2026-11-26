@@ -11,11 +11,10 @@ use Doctrine\DBAL\Driver\Middleware\AbstractDriverMiddleware;
 use Doctrine\DBAL\Driver\Middleware\AbstractStatementMiddleware;
 use Doctrine\DBAL\Driver\Result;
 use Doctrine\DBAL\Driver\Statement;
-use Doctrine\DBAL\ParameterType;
 use Indexr\Otel\Core\SqlSpanRunner;
 use Throwable;
 
-/** DBAL 4 middleware; query values are never observed. */
+/** DBAL 3 and 4 middleware; query values are never observed. */
 final class IndexerDbalMiddleware implements Middleware
 {
     public function __construct(
@@ -98,16 +97,13 @@ final class IndexerStatement extends AbstractStatementMiddleware
         parent::__construct($statement);
     }
 
-    public function bindValue(int|string $param, mixed $value, ParameterType $type): void
-    {
-        parent::bindValue($param, $value, $type);
-    }
-
-    public function execute(): Result
+    // bindValue() is not overridden: the base class forwards it, and its signature differs between DBAL 3 and 4.
+    // DBAL 3 passes optional parameters to execute(); DBAL 4 takes none, so the extra argument is ignored there.
+    public function execute($params = null): Result
     {
         $active = (new SqlSpanRunner($this->name, $this->namespaces, $this->root, $this->prefixes))->begin($this->sql);
         try {
-            return parent::execute();
+            return parent::execute($params);
         } catch (Throwable $failure) {
             $active?->finish($failure);
             $active = null;
