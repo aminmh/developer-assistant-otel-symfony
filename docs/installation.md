@@ -9,7 +9,53 @@ composer require aminmh/developer-assistant-otel-symfony
 composer require open-telemetry/exporter-otlp
 ```
 
+For Symfony, also register the bundle in `config/bundles.php`: the package has no Symfony Flex recipe, so Composer installs it without enabling it, and no spans are produced until it is listed.
+
+```php
+return [
+    // ...
+    Indexr\Otel\Symfony\IndexerOtelBundle::class => ['all' => true],
+];
+```
+
 Install `ext-opentelemetry` in the PHP image using the PECL package supported by the base image, then enable it in `php.ini`. The extension is not a Composer package. The auto-instrumentation packages require that extension; if it is absent, their hooks are unavailable and the Indexr framework adapter catches instrumentation failures and leaves application behavior intact.
+
+### Method activity needs ext-opentelemetry
+
+The per-request **Method activity** view is built from method hooks that the library registers through `OpenTelemetry\Instrumentation\hook()`. That function exists only while the `ext-opentelemetry` PHP extension is loaded **in the container that runs PHP**. Without it, request, database, command and job spans are still recorded, the method manifest is still written, but no hook is registered, so every request shows "No method-call data was captured for this request."
+
+Check it in the app's container (it must print `bool(true)`):
+
+```sh
+docker compose exec php php -r 'var_dump(function_exists("OpenTelemetry\\Instrumentation\\hook"));'
+```
+
+Install it in the image, then rebuild:
+
+```dockerfile
+# images that use the install-php-extensions helper
+RUN install-php-extensions opentelemetry
+# any other image
+RUN pecl install opentelemetry && docker-php-ext-enable opentelemetry
+```
+
+To try it without rebuilding the image, build the extension once in a throwaway container from the same image and mount the result into the app container. The extension must be built with the same PHP version, thread safety and operating system as the image that will load it:
+
+```sh
+mkdir -p ./otel-ext
+docker run --rm -v "$PWD/otel-ext:/out" <your-php-image> sh -c \
+  'install-php-extensions opentelemetry && cp "$(php -r "echo ini_get(\"extension_dir\");")/opentelemetry.so" /out/ && echo "extension=opentelemetry.so" > /out/opentelemetry.ini'
+```
+
+```yaml
+services:
+  php:
+    volumes:
+      - ./otel-ext/opentelemetry.so:/usr/local/lib/php/extensions/<extension-dir>/opentelemetry.so:ro
+      - ./otel-ext/opentelemetry.ini:/usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini:ro
+```
+
+Use the `extension_dir` that `php -i` reports in your image for `<extension-dir>`. Restart PHP-FPM (or the container) afterwards so web requests load the extension.
 
 After enabling the extension, optionally install the matching framework auto-instrumentation package and integrations your application uses:
 
