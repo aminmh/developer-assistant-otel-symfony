@@ -13,6 +13,7 @@ use Indexr\Otel\Core\SymbolIdNormalizer;
 use Indexr\Otel\Core\TelemetryBootstrap;
 use Indexr\Otel\Core\ServerRequestSpan;
 use Indexr\Otel\Core\TraceContext;
+use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\API\Trace\SpanInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
@@ -151,7 +152,7 @@ final class KernelSubscriber implements EventSubscriberInterface
             }
             $throwable = $event->getThrowable();
             $attributes = (new ExceptionContext())->attributes($throwable, $this->applicationNamespaces);
-            $span = SpanInterface::getCurrent();
+            $span = Span::getCurrent();
             if ($span->isRecording()) {
                 (new SpanEnricher())->enrich($span, $attributes);
             }
